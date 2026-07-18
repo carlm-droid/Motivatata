@@ -20,6 +20,13 @@ self.addEventListener('install', async (event) => {
   );
 });
 
+self.registration.showNotification("Positive Vibes ✨", {
+    body: finalMessage,
+    icon: 'icon.png',  /* <--- تم وضع اسم الصورة هنا */
+    tag: 'vibe-notification',
+    renotify: true
+});
+
 if (workbox.navigationPreload.isSupported()) {
   workbox.navigationPreload.enable();
 }
