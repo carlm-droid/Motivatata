@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Vibes ✨</title>
+    <style>
+        :root {
+          --primary: #6c5ce7;
+          --primary-dark: #5b4cc4;
+          --text: #2d3436;
+          --bg1: #74b9ff;
+          --bg2: #a29bfe;
+        }
+        * { box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', sans-serif;
+          background: linear-gradient(135deg, var(--bg1), var(--bg2));
+          color: var(--text);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+          padding: 20px;
+        }
+        .container {
+          background: #fff;
+          padding: 30px;
+          border-radius: 20px;
+          box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+          text-align: center;
+          max-width: 360px;
+          width: 100%;
+        }
+        .title { margin: 0 0 20px; color: var(--primary); }
+        input, select, button {
+          width: 100%;
+          padding: 12px;
+          margin: 10px 0;
+          border: 2px solid #eee;
+          border-radius: 10px;
+          font-size: 16px;
+        }
+        input:focus, select:focus { border-color: var(--primary); outline: none; }
+        button {
+          background: var(--primary); color: #fff; border: none;
+          font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        button:hover { background: var(--primary-dark); }
+        #status { font-size: 14px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="title">Positive Vibes ✨</h2>
+        <input type="text" id="name" placeholder="Enter your first name">
+        <input type="number" id="age" placeholder="Enter your age" min="1">
+        <select id="gender">
+            <option value="" disabled selected>Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+        <button id="activateBtn">Activate Notifications</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const swCode = `
+            const quotes = {
+                male: [
+                    "You're doing great today, keep pushing! 💪",
+                    "The world is a better place with you in it.",
+                    "Henit ya [Name], ma b2a fi ktir w byokhlas el nhar! 👍",
+                    "Waet w byoetae, khallik positive w raye2 ya batal.",
+                    "Nharak jamil metlak ya [Name]! ⭐"
+                ],
+                female: [
+                    "You're doing great today, keep pushing! ✨",
+                    "The world is a better place with you in it.",
+                    "Henit ya [Name], ma b2a fi ktir w byokhlas el nhar! 🌸",
+                    "Waet w byoetae, khallik positive w ray2a ya helwe.",
+                    "Nharik jamil metlik ya [Name]! 🎀"
+                ]
+            };
+
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => self.clients.claim());
+
+            self.addEventListener('message', async (event) => {
+                if (event.data.action === 'scheduleVibes') {
+                    const name = event.data.name;
+                    const gender = event.data.gender;
+                    const list = quotes[gender] || quotes.male;
+
+                    // 1. إرسال أول إشعار فوراً للتجربة
+                    sendVibeNow(list, name);
+
+                    // 2. التوقيت هنا تم تعديله ليصبح دقيقة واحدة (60000 ملي ثانية)
+                    const oneMinute = 60000; 
+                    
+                    if ('showTrigger' in Notification.prototype) {
+                        // جدولة الإشعار القادم بعد دقيقة واحدة
+                        await self.registration.showNotification("Positive Vibes ✨", {
+                            body: getRandomQuote(list, name),
+                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                            tag: 'vibe-future-1',
+                            showTrigger: new TimestampTrigger(Date.now() + oneMinute)
+                        });
+                        
+                        // جدولة الإشعار الثاني بعد دقيقتين
+                        await self.registration.showNotification("Positive Vibes ✨", {
+                            body: getRandomQuote(list, name),
+                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                            tag: 'vibe-future-2',
+                            showTrigger: new TimestampTrigger(Date.now() + (oneMinute * 2))
+                        });
+
+                        // جدولة الإشعار الثالث بعد 3 دقائق
+                        await self.registration.showNotification("Positive Vibes ✨", {
+                            body: getRandomQuote(list, name),
+                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                            tag: 'vibe-future-3',
+                            showTrigger: new TimestampTrigger(Date.now() + (oneMinute * 3))
+                        });
+                    } else {
+                        // طريقة احتياطية للمتصفحات القديمة
+                        setInterval(() => {
+                            sendVibeNow(list, name);
+                        }, oneMinute);
+                    }
+                }
+            });
+
+            function getRandomQuote(list, name) {
+                const randomQuote = list[Math.floor(Math.random() * list.length)];
+                return randomQuote.replace('[Name]', name);
+            }
+
+            function sendVibeNow(list, name) {
+                self.registration.showNotification("Positive Vibes ✨", {
+                    body: getRandomQuote(list, name),
+                    icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                    tag: 'vibe-now',
+                    renotify: true
+                });
+            }
+        `;
+
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl)
+            .then(reg => console.log('Service Worker Active'))
+            .catch(err => console.error(err));
+        }
+
+        const form = {
+            name: document.getElementById('name'),
+            age: document.getElementById('age'),
+            gender: document.getElementById('gender'),
+            button: document.getElementById('activateBtn'),
+            status: document.getElementById('status')
+        };
+
+        form.button.addEventListener('click', async () => {
+            const firstName = form.name.value.trim().split(/\s+/)[0];
+            const age = form.age.value.trim();
+            const gender = form.gender.value;
+
+            if (!firstName || !age || !gender) {
+                alert('Fill everything first! 📝');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Notification permission denied 🥺');
+                return;
+            }
+
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    action: 'scheduleVibes',
+                    name: firstName,
+                    gender: gender
+                });
+                form.status.textContent = 'Armed! You will get notifications every minute. ✨';
+                alert(`Perfect ya ${firstName}! Check your screen inside 60 seconds.`);
+            } else {
+                alert('Optimizing application, please tap the button once more! 😉');
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
