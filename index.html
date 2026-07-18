@@ -67,6 +67,7 @@
     </div>
 
     <script>
+        // كود الـ Service Worker المضمون لكل الأجهزة
         const swCode = `
             const quotes = {
                 male: [
@@ -85,64 +86,39 @@
                 ]
             };
 
+            let userName = "friend";
+            let userGender = "male";
+            let timer = null;
+
             self.addEventListener('install', (e) => self.skipWaiting());
             self.addEventListener('activate', (e) => self.clients.claim());
 
-            self.addEventListener('message', async (event) => {
-                if (event.data.action === 'scheduleVibes') {
-                    const name = event.data.name;
-                    const gender = event.data.gender;
-                    const list = quotes[gender] || quotes.male;
-
-                    // 1. إرسال أول إشعار فوراً للتجربة
-                    sendVibeNow(list, name);
-
-                    // 2. التوقيت هنا تم تعديله ليصبح دقيقة واحدة (60000 ملي ثانية)
-                    const oneMinute = 60000; 
+            self.addEventListener('message', (event) => {
+                if (event.data.action === 'startTimer') {
+                    userName = event.data.name;
+                    userGender = event.data.gender;
                     
-                    if ('showTrigger' in Notification.prototype) {
-                        // جدولة الإشعار القادم بعد دقيقة واحدة
-                        await self.registration.showNotification("Positive Vibes ✨", {
-                            body: getRandomQuote(list, name),
-                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
-                            tag: 'vibe-future-1',
-                            showTrigger: new TimestampTrigger(Date.now() + oneMinute)
-                        });
-                        
-                        // جدولة الإشعار الثاني بعد دقيقتين
-                        await self.registration.showNotification("Positive Vibes ✨", {
-                            body: getRandomQuote(list, name),
-                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
-                            tag: 'vibe-future-2',
-                            showTrigger: new TimestampTrigger(Date.now() + (oneMinute * 2))
-                        });
+                    // إشعار فوري للتأكد أنه شغال
+                    sendVibe();
 
-                        // جدولة الإشعار الثالث بعد 3 دقائق
-                        await self.registration.showNotification("Positive Vibes ✨", {
-                            body: getRandomQuote(list, name),
-                            icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
-                            tag: 'vibe-future-3',
-                            showTrigger: new TimestampTrigger(Date.now() + (oneMinute * 3))
-                        });
-                    } else {
-                        // طريقة احتياطية للمتصفحات القديمة
-                        setInterval(() => {
-                            sendVibeNow(list, name);
-                        }, oneMinute);
-                    }
+                    if(timer) clearInterval(timer);
+
+                    // العداد شغال كل دقيقة واحدة (60000 مللي ثانية)
+                    timer = setInterval(() => {
+                        sendVibe();
+                    }, 60000);
                 }
             });
 
-            function getRandomQuote(list, name) {
+            function sendVibe() {
+                const list = quotes[userGender] || quotes.male;
                 const randomQuote = list[Math.floor(Math.random() * list.length)];
-                return randomQuote.replace('[Name]', name);
-            }
+                const finalMessage = randomQuote.replace('[Name]', userName);
 
-            function sendVibeNow(list, name) {
                 self.registration.showNotification("Positive Vibes ✨", {
-                    body: getRandomQuote(list, name),
+                    body: finalMessage,
                     icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
-                    tag: 'vibe-now',
+                    tag: 'vibe-notification',
                     renotify: true
                 });
             }
@@ -153,7 +129,11 @@
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register(swUrl)
-            .then(reg => console.log('Service Worker Active'))
+            .then(reg => {
+                console.log('Service Worker Registered');
+                // نضمن عمل الـ update فوراً إذا غيرنا الكود
+                reg.update(); 
+            })
             .catch(err => console.error(err));
         }
 
@@ -175,22 +155,24 @@
                 return;
             }
 
+            // طلب الإذن
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Notification permission denied 🥺');
+                alert('Oops! You need to allow notifications in your settings. 🥺');
                 return;
             }
 
+            // تشغيل العداد
             if (navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
-                    action: 'scheduleVibes',
+                    action: 'startTimer',
                     name: firstName,
                     gender: gender
                 });
-                form.status.textContent = 'Armed! You will get notifications every minute. ✨';
-                alert(`Perfect ya ${firstName}! Check your screen inside 60 seconds.`);
+                form.status.textContent = 'Armed! Active every 1 minute. ✨';
             } else {
-                alert('Optimizing application, please tap the button once more! 😉');
+                // هيدي الحركة لحل مشكلة أول تشغيل
+                form.status.textContent = 'Connecting... Please click Activate once more! 😉';
                 window.location.reload();
             }
         });
