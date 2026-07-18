@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Positive Vibes ✨</title>
+    
+    <!-- تم تصحيح الرابط ليقرأ الملف الخارجي مباشرة -->
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        :root {
+          /* الألوان الجديدة الفخمة والراكزة */
+          --primary: #f59e0b; /* ذهبي ملكي مضيء */
+          --primary-dark: #d97706; /* ذهبي مطفي داكن */
+          --text: #f8fafc; /* أبيض ناصع للنصوص على الخلفية الداكنة */
+          --text-muted: #94a3b8;
+          --bg1: #0f172a; /* كحلي ليلي عميق جداً */
+          --bg2: #1e1b4b; /* كحلي مائل للبنفسجي الغامق */
+          --container-bg: #1e293b; /* رمادي/كحلي فخم للمستند الرئيسي */
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+          font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+          background: linear-gradient(135deg, var(--bg1), var(--bg2));
+          color: var(--text);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          min-height: 100vh;
+          margin: 0;
+          padding: 20px;
+        }
+        
+        .container {
+          background: var(--container-bg);
+          padding: 40px 30px;
+          border-radius: 24px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          text-align: center;
+          max-width: 380px;
+          width: 100%;
+          border: 1px solid rgba(245, 158, 11, 0.15); /* إطار ذهبي خفيف جداً */
+        }
+        
+        .title { 
+          margin: 0 0 10px; 
+          color: var(--primary); 
+          font-size: 26px;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+        }
+        
+        .subtitle {
+          font-size: 14px;
+          color: var(--text-muted);
+          margin-bottom: 25px;
+        }
+        
+        input, select, button {
+          width: 100%;
+          padding: 14px;
+          margin: 12px 0;
+          border: 2px solid #334155;
+          border-radius: 12px;
+          font-size: 16px;
+          background: #0f172a;
+          color: var(--text);
+          transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus { 
+          border-color: var(--primary); 
+          outline: none;
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+        
+        button {
+          background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+          color: #0f172a; 
+          border: none;
+          font-weight: bold; 
+          cursor: pointer;
+          font-size: 16px;
+          letter-spacing: 0.5px;
+        }
+        
+        button:hover { 
+          transform: translateY(-2px);
+          box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+        
+        #status { 
+          font-size: 14px; 
+          color: var(--primary); 
+          margin-top: 15px; 
+          font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="title">Positive Vibes ✨</h2>
+        <div class="subtitle">Your daily armed dose of power</div>
+        <input type="text" id="name" placeholder="Enter your first name">
+        <input type="number" id="age" placeholder="Enter your age" min="1">
+        <select id="gender">
+            <option value="" disabled selected>Select Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select>
+        <button id="activateBtn">Activate Notifications</button>
+        <p id="status"></p>
+    </div>
+
+    <script>
+        const swCode = `
+            const quotes = {
+                male: [
+                    "You're doing great today, keep pushing! 💪",
+                    "The world is a better place with you in it.",
+                    "Henit ya [Name], ma b2a fi ktir w byokhlas el nhar! 👍",
+                    "Waet w byoetae, khallik positive w raye2 ya batal.",
+                    "Nharak jamil metlak ya [Name]! ⭐"
+                ],
+                female: [
+                    "You're doing great today, keep pushing! ✨",
+                    "The world is a better place with you in it.",
+                    "Henit ya [Name], ma b2a fi ktir w byokhlas el nhar! 🌸",
+                    "Waet w byoetae, khallik positive w ray2a ya helwe.",
+                    "Nharik jamil metlik ya [Name]! 🎀"
+                ]
+            };
+
+            let userName = "friend";
+            let userGender = "male";
+            let timer = null;
+
+            self.addEventListener('install', (e) => self.skipWaiting());
+            self.addEventListener('activate', (e) => self.clients.claim());
+
+            self.addEventListener('message', (event) => {
+                if (event.data.action === 'startTimer') {
+                    userName = event.data.name;
+                    userGender = event.data.gender;
+                    
+                    sendVibe();
+                    if(timer) clearInterval(timer);
+
+                    timer = setInterval(() => {
+                        sendVibe();
+                    }, 60000);
+                }
+            });
+
+            function sendVibe() {
+                const list = quotes[userGender] || quotes.male;
+                const randomQuote = list[Math.floor(Math.random() * list.length)];
+                const finalMessage = randomQuote.replace('[Name]', userName);
+
+                self.registration.showNotification("Positive Vibes ✨", {
+                    body: finalMessage,
+                    icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                    tag: 'vibe-notification',
+                    renotify: true
+                });
+            }
+        `;
+
+        const blob = new Blob([swCode], { type: 'application/javascript' });
+        const swUrl = URL.createObjectURL(blob);
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(swUrl)
+            .then(reg => reg.update())
+            .catch(err => console.error(err));
+        }
+
+        const form = {
+            name: document.getElementById('name'),
+            age: document.getElementById('age'),
+            gender: document.getElementById('gender'),
+            button: document.getElementById('activateBtn'),
+            status: document.getElementById('status')
+        };
+
+        form.button.addEventListener('click', async () => {
+            const firstName = form.name.value.trim().split(/\s+/)[0];
+            const age = form.age.value.trim();
+            const gender = form.gender.value;
+
+            if (!firstName || !age || !gender) {
+                alert('Fill everything first! 📝');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Please allow notifications in settings! 🥺');
+                return;
+            }
+
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    action: 'startTimer',
+                    name: firstName,
+                    gender: gender
+                });
+                form.status.textContent = 'Armed! Active every 1 minute. ✨';
+            } else {
+                form.status.textContent = 'Connecting... Click once more! 😉';
+                window.location.reload();
+            }
+        });
+    </script>
+</body>
+</html>
