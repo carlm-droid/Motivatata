@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Positive Vibes ✨</title>
+    
+    <!-- ربط ملف الـ Manifest الجاهز لتوافق المتجر -->
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22Positive%20Vibes%22,%22short_name%22:%22Vibes%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23a29bfe%22,%22theme_color%22:%22%236c5ce7%22,%22icons%22:[{%22src%22:%22https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png%22,%22sizes%22:%2272x72%22,%22type%22:%22image/png%22},{%22src%22:%22https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/512x512/2728.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
+    
     <style>
         :root {
           --primary: #6c5ce7;
@@ -67,7 +71,6 @@
     </div>
 
     <script>
-        // كود الـ Service Worker المضمون لكل الأجهزة
         const swCode = `
             const quotes = {
                 male: [
@@ -98,12 +101,9 @@
                     userName = event.data.name;
                     userGender = event.data.gender;
                     
-                    // إشعار فوري للتأكد أنه شغال
                     sendVibe();
-
                     if(timer) clearInterval(timer);
 
-                    // العداد شغال كل دقيقة واحدة (60000 مللي ثانية)
                     timer = setInterval(() => {
                         sendVibe();
                     }, 60000);
@@ -129,11 +129,7 @@
 
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register(swUrl)
-            .then(reg => {
-                console.log('Service Worker Registered');
-                // نضمن عمل الـ update فوراً إذا غيرنا الكود
-                reg.update(); 
-            })
+            .then(reg => reg.update())
             .catch(err => console.error(err));
         }
 
@@ -155,14 +151,12 @@
                 return;
             }
 
-            // طلب الإذن
             const permission = await Notification.requestPermission();
             if (permission !== 'granted') {
-                alert('Oops! You need to allow notifications in your settings. 🥺');
+                alert('Please allow notifications in settings! 🥺');
                 return;
             }
 
-            // تشغيل العداد
             if (navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage({
                     action: 'startTimer',
@@ -171,8 +165,7 @@
                 });
                 form.status.textContent = 'Armed! Active every 1 minute. ✨';
             } else {
-                // هيدي الحركة لحل مشكلة أول تشغيل
-                form.status.textContent = 'Connecting... Please click Activate once more! 😉';
+                form.status.textContent = 'Connecting... Click once more! 😉';
                 window.location.reload();
             }
         });
