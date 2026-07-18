@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Positive Vibes ✨</title>
+    <title>Motivatata ✨</title>
     
-    <!-- تم تصحيح الرابط ليقرأ الملف الخارجي مباشرة -->
+    <!-- ربط ملف الـ Manifest الخارجي -->
     <link rel="manifest" href="manifest.json">
     
     <style>
         :root {
-          /* الألوان الجديدة الفخمة والراكزة */
+          /* الألوان الفخمة والراكزة */
           --primary: #f59e0b; /* ذهبي ملكي مضيء */
           --primary-dark: #d97706; /* ذهبي مطفي داكن */
           --text: #f8fafc; /* أبيض ناصع للنصوص على الخلفية الداكنة */
@@ -103,7 +103,7 @@
 <body>
 
     <div class="container">
-        <h2 class="title">Positive Vibes ✨</h2>
+        <h2 class="title">Motivatata ✨</h2>
         <div class="subtitle">Your daily armed dose of power</div>
         <input type="text" id="name" placeholder="Enter your first name">
         <input type="number" id="age" placeholder="Enter your age" min="1">
@@ -150,9 +150,10 @@
                     sendVibe();
                     if(timer) clearInterval(timer);
 
+                    // تم تعديل التايمر ليصبح كل ساعتين (7200000 مللي ثانية)
                     timer = setInterval(() => {
                         sendVibe();
-                    }, 60000);
+                    }, 7200000);
                 }
             });
 
@@ -161,9 +162,9 @@
                 const randomQuote = list[Math.floor(Math.random() * list.length)];
                 const finalMessage = randomQuote.replace('[Name]', userName);
 
-                self.registration.showNotification("Positive Vibes ✨", {
+                self.registration.showNotification("Motivatata ✨", {
                     body: finalMessage,
-                    icon: 'https://cdnjs.cloudflare.com/ajax/libs/twemoji/14.0.2/72x72/2728.png',
+                    icon: 'icon.png', /* يقرأ الآن الأيقونة الفخمة المرفوعة في المستودع */
                     tag: 'vibe-notification',
                     renotify: true
                 });
@@ -209,7 +210,7 @@
                     name: firstName,
                     gender: gender
                 });
-                form.status.textContent = 'Armed! Active every 1 minute. ✨';
+                form.status.textContent = 'Armed! Active every 2 hours. ✨';
             } else {
                 form.status.textContent = 'Connecting... Click once more! 😉';
                 window.location.reload();
