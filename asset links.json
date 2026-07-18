@@ -1,0 +1,9 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "io.github.carlm_droid.motivatata",
+        "sha256_cert_fingerprints": ["C5:7D:1B:CB:19:C8:AC:4F:23:AA:9B:4D:4D:96:71:E3:19:A3:A2:5C:50:8D:D0:4B:D7:17:EE:36:B3:95:2D:AE"]
+      }
+    }]
+
