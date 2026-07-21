@@ -69,11 +69,12 @@
         <p id="status"></p>
     </div>
 
-    <!-- 🔥 Firebase App & SDKs -->
+    <!-- 🔥 Firebase App & SDKs & App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getRandomQuote } from "./motivations.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAujJQC1DC7_weXGyq3O0kXqOhTV0F06sA",
@@ -87,34 +88,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-
-        // 📚 العبارات التحفيزية مقسمة حسب اللغة
-        const motivationalQuotes = {
-            ar: [
-                { title: "Motivatata ✨", body: "استمر، فنجاحك أقرب مما تتخيل اليوم! 💪" },
-                { title: "جرعة طاقة ⚡", body: "كل خطوة صغيرة تصنع فرقاً كبيراً في مستقبلك." },
-                { title: "خليك قوي 🌟", body: "الاستمرارية هي سر العظماء.. لا تتوقف الآن!" },
-                { title: "ركز وربح 🎯", body: "ركز على أهدافك ودع الأعذار جانباً." }
-            ],
-            en: [
-                { title: "Motivatata ✨", body: "Keep going, your success is closer than you think! 💪" },
-                { title: "Power Dose ⚡", body: "Every small step makes a big difference for your future." },
-                { title: "Stay Strong 🔥", body: "Consistency is the key to greatness. Don't stop now!" },
-                { title: "Focus & Win 🎯", body: "Focus on your goals and leave the excuses behind." }
-            ],
-            fr: [
-                { title: "Motivatata ✨", body: "Continuez, votre succès est plus proche que vous ne le pensez ! 💪" },
-                { title: "Dose d'énergie ⚡", body: "Chaque petit pas fait une grande différence pour votre avenir." },
-                { title: "Reste Fort 🔥", body: "La régularité est la clé de la grandeur. N'abandonne pas !" },
-                { title: "Focus & Gagne 🎯", body: "Concentre-toi sur tes objectifs et oublie les excuses." }
-            ],
-            franco: [
-                { title: "Motivatata ✨", body: "Kammel, neja7ak a2rab men ma btetkhayyal l yawm! 💪" },
-                { title: "Power Dose ⚡", body: "Kull khetwe zghire bte3mol far2 kbir b mestaqbalak." },
-                { title: "Khallik 2awi 🔥", body: "L estemraréye heye serr l 3ozama2.. ma twa22ef halla2!" },
-                { title: "Rakkezz w Rba7 🎯", body: "Rakkezz 3ala ahdafak w etrok l a3zar 3a janab." }
-            ]
-        };
 
         // UI Elements
         const authSection = document.getElementById('authSection');
@@ -207,7 +180,7 @@
             }
         });
 
-        // Save User Settings (Interval & Language)
+        // Save User Settings
         document.getElementById('saveIntervalBtn').addEventListener('click', async () => {
             if (!currentUser) return;
             const selectedInterval = notificationIntervalSelect.value;
@@ -231,19 +204,10 @@
             signOut(auth);
         });
 
-        // دالة لإرسال الإشعار حسب اللغة المختارات
+        // Send Notification
         function sendLocalNotification(lang = 'mix') {
             if (Notification.permission === 'granted') {
-                let activeLang = lang;
-
-                // لو الخيار Mix نختار لغة عشوائية بالكامل كل مرة
-                if (lang === 'mix') {
-                    const availableLangs = ['ar', 'en', 'fr', 'franco'];
-                    activeLang = availableLangs[Math.floor(Math.random() * availableLangs.length)];
-                }
-
-                const quotesList = motivationalQuotes[activeLang] || motivationalQuotes['ar'];
-                const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
+                const randomQuote = getRandomQuote(lang);
                 
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(registration => {
@@ -261,10 +225,9 @@
             }
         }
 
-        // جدولة الإشعارات
+        // Notification Schedule
         function startNotificationSchedule(hours, lang) {
             if (notificationTimer) clearInterval(notificationTimer);
-            
             const intervalMs = hours * 60 * 60 * 1000;
             sendLocalNotification(lang);
 
@@ -273,14 +236,14 @@
             }, intervalMs);
         }
 
-        // Enable Push Notifications
+        // Enable Push & Register SW
         document.getElementById('enablePushBtn').addEventListener('click', async () => {
             status.textContent = "Requesting permission...";
             try {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     if ('serviceWorker' in navigator) {
-                        await navigator.serviceWorker.register('sw.js');
+                        await navigator.serviceWorker.register('./sw.js');
                     }
                     const hours = parseInt(notificationIntervalSelect.value || "1");
                     const lang = notificationLangSelect.value || "mix";
@@ -294,6 +257,13 @@
                 status.textContent = "Error: " + err.message;
             }
         });
+
+        // Auto register SW on load
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW registration failed:', err));
+            });
+        }
     </script>
 </body>
 </html>
