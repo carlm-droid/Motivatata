@@ -101,6 +101,264 @@
           color: var(--primary); 
           margin-top: 12px; 
           font-weight: 500;
+          word-break: break-all;
+        }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2 class="title">Motivatata ✨</h2>
+        <div class="subtitle">Your daily armed dose of power</div>
+
+        <!-- 🔐 Auth Section -->
+        <div id="authSection">
+            <h3 id="authTitle" style="margin: 0 0 15px; font-size: 18px;">Login</h3>
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Password">
+            
+            <div id="extraSignupFields" class="hidden">
+                <input type="text" id="name" placeholder="First Name">
+                <input type="number" id="age" placeholder="Age" min="1">
+                <select id="gender">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+
+            <button id="authBtn">Log In</button>
+            <div class="toggle-auth" id="toggleAuthBtn">Don't have an account? Sign Up</div>
+        </div>
+
+        <!-- ⚙️ App Dashboard -->
+        <div id="dashboardSection" class="hidden">
+            <p id="welcomeMsg" style="font-weight: bold; color: var(--primary);"></p>
+            
+            <button id="enablePushBtn">Enable Push Notifications 🔔</button>
+            <button id="logoutBtn" style="background: #334155; color: #fff; margin-top: 8px;">Log Out</button>
+        </div>
+
+        <p id="status"></p>
+    </div>
+
+    <!-- 🔥 Firebase App & FCM SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAujJQC1DC7_weXGyq3O0kXqOhTV0F06sA",
+            authDomain: "motivatata.firebaseapp.com",
+            projectId: "motivatata",
+            storageBucket: "motivatata.firebasestorage.app",
+            messagingSenderId: "628570963688",
+            appId: "1:628570963688:web:7676a2024fd30a0545d35d"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const messaging = getMessaging(app);
+
+        // UI Elements
+        const authSection = document.getElementById('authSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const authTitle = document.getElementById('authTitle');
+        const authBtn = document.getElementById('authBtn');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+        const extraSignupFields = document.getElementById('extraSignupFields');
+        const status = document.getElementById('status');
+        const welcomeMsg = document.getElementById('welcomeMsg');
+
+        let isSignUp = false;
+        let currentUser = null;
+
+        // Toggle Auth Mode
+        toggleAuthBtn.addEventListener('click', () => {
+            isSignUp = !isSignUp;
+            authTitle.textContent = isSignUp ? "Create Account" : "Login";
+            authBtn.textContent = isSignUp ? "Sign Up" : "Log In";
+            toggleAuthBtn.textContent = isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up";
+            extraSignupFields.classList.toggle('hidden', !isSignUp);
+        });
+
+        // Auth Submit
+        authBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                alert('Please fill email and password!');
+                return;
+            }
+
+            status.textContent = "Processing...";
+
+            try {
+                if (isSignUp) {
+                    const name = document.getElementById('name').value.trim();
+                    const age = document.getElementById('age').value.trim();
+                    const gender = document.getElementById('gender').value;
+
+                    if (!name || !age || !gender) {
+                        alert('Please fill all profile fields!');
+                        return;
+                    }
+
+                    const res = await createUserWithEmailAndPassword(auth, email, password);
+                    await setDoc(doc(db, "users", res.user.uid), {
+                        name: name,
+                        age: age,
+                        gender: gender,
+                        email: email
+                    });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                status.textContent = "";
+            } catch (err) {
+                status.textContent = err.message;
+            }
+        });
+
+        // Auth State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    welcomeMsg.textContent = `Welcome back, ${userDoc.data().name}! ✨`;
+                } else {
+                    welcomeMsg.textContent = `Welcome! ✨`;
+                }
+
+                authSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+            } else {
+                authSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+                currentUser = null;
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+        // Register FCM Push Token
+        document.getElementById('enablePushBtn').addEventListener('click', async () => {
+            status.textContent = "Requesting permission...";
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    // Register SW
+                    const registration = await navigator.serviceWorker.register('sw.js');
+                    
+                    // Get FCM Token
+                    const token = await getToken(messaging, {
+                        vapidKey: 'YOUR_VAPID_KEY_HERE', // 👈 حط الـ VAPID Key هون!
+                        serviceWorkerRegistration: registration
+                    });
+
+                    if (token) {
+                        // Save FCM Token into User's Firestore Document
+                        if (currentUser) {
+                            await updateDoc(doc(db, "users", currentUser.uid), {
+                                fcmToken: token
+                            });
+                        }
+                        status.textContent = "Push Notifications Enabled! 🎉";
+                        console.log("FCM Token:", token);
+                    } else {
+                        status.textContent = "Failed to get Push Token.";
+                    }
+                } else {
+                    status.textContent = "Permission denied for notifications.";
+                }
+            } catch (err) {
+                console.error(err);
+                status.textContent = "Error: " + err.message;
+            }
+        });
+
+        // Foreground Message Handler
+        onMessage(messaging, (payload) => {
+            console.log('Message received in foreground: ', payload);
+            alert(`${payload.notification.title}\n${payload.notification.body}`);
+        });
+    </script>
+</body>
+</html>          border-radius: 24px;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+          text-align: center;
+          max-width: 380px;
+          width: 100%;
+          border: 1px solid rgba(245, 158, 11, 0.15);
+        }
+        
+        .title { 
+          margin: 0 0 5px; 
+          color: var(--primary); 
+          font-size: 26px;
+          font-weight: 700;
+        }
+        
+        .subtitle {
+          font-size: 13px;
+          color: var(--text-muted);
+          margin-bottom: 20px;
+        }
+        
+        input, select, button {
+          width: 100%;
+          padding: 12px;
+          margin: 8px 0;
+          border: 2px solid #334155;
+          border-radius: 12px;
+          font-size: 15px;
+          background: #0f172a;
+          color: var(--text);
+          transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus { 
+          border-color: var(--primary); 
+          outline: none;
+          box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+        }
+        
+        button {
+          background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+          color: #0f172a; 
+          border: none;
+          font-weight: bold; 
+          cursor: pointer;
+          font-size: 15px;
+          margin-top: 12px;
+        }
+        
+        button:hover { 
+          transform: translateY(-2px);
+          box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .toggle-auth {
+          color: var(--primary);
+          cursor: pointer;
+          font-size: 13px;
+          margin-top: 15px;
+          text-decoration: underline;
+        }
+        
+        #status { 
+          font-size: 13px; 
+          color: var(--primary); 
+          margin-top: 12px; 
+          font-weight: 500;
         }
 
         .hidden { display: none !important; }
