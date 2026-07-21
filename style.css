@@ -1,0 +1,117 @@
+:root {
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --bg1: #0f172a;
+  --bg2: #1e1b4b;
+  --container-bg: #1e293b;
+}
+
+* { 
+  box-sizing: border-box; 
+}
+
+body {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: linear-gradient(135deg, var(--bg1), var(--bg2));
+  color: var(--text);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  background: var(--container-bg);
+  padding: 30px 20px;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  max-width: 380px;
+  width: 100%;
+  border: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.title { 
+  margin: 0 0 5px; 
+  color: var(--primary); 
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+input, select, button {
+  width: 100%;
+  padding: 10px 12px;
+  margin: 6px 0;
+  border: 2px solid #334155;
+  border-radius: 10px;
+  font-size: 14px;
+  background: #0f172a;
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+input:focus, select:focus { 
+  border-color: var(--primary); 
+  outline: none;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.2);
+}
+
+button {
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark)); 
+  color: #0f172a; 
+  border: none;
+  font-weight: bold; 
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover { 
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(245, 158, 11, 0.3);
+}
+
+.toggle-auth {
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 12px;
+  text-decoration: underline;
+}
+
+#status { 
+  font-size: 12px; 
+  color: var(--primary); 
+  margin-top: 10px; 
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.hidden { 
+  display: none !important; 
+}
+
+.timer-box {
+  margin-top: 12px;
+  text-align: left;
+  background: #0f172a;
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+}
+
+.timer-box label {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 4px;
+}
