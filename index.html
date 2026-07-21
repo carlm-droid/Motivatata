@@ -52,6 +52,7 @@
                 <!-- 🌐 اختيار لغة الإشعارات -->
                 <label for="notificationLang" style="margin-top: 8px;">Notification Language 🌐:</label>
                 <select id="notificationLang">
+                    <option value="mix">🔀 Mix (All Languages / مشكل)</option>
                     <option value="ar">العربية (Arabic)</option>
                     <option value="en">English</option>
                     <option value="fr">Français</option>
@@ -92,7 +93,7 @@
             ar: [
                 { title: "Motivatata ✨", body: "استمر، فنجاحك أقرب مما تتخيل اليوم! 💪" },
                 { title: "جرعة طاقة ⚡", body: "كل خطوة صغيرة تصنع فرقاً كبيراً في مستقبلك." },
-                { title: "خليك قزي 🌟", body: "الاستمرارية هي سر العظماء.. لا تتوقف الآن!" },
+                { title: "خليك قوي 🌟", body: "الاستمرارية هي سر العظماء.. لا تتوقف الآن!" },
                 { title: "ركز وربح 🎯", body: "ركز على أهدافك ودع الأعذار جانباً." }
             ],
             en: [
@@ -171,7 +172,7 @@
                         gender: gender,
                         email: email,
                         intervalHours: "1",
-                        lang: "ar"
+                        lang: "mix"
                     });
                 } else {
                     await signInWithEmailAndPassword(auth, email, password);
@@ -217,7 +218,7 @@
                     intervalHours: selectedInterval,
                     lang: selectedLang
                 });
-                status.textContent = `Settings saved! ⏱️ Every ${selectedInterval}h | 🌐 Language: ${selectedLang.toUpperCase()}`;
+                status.textContent = `Settings saved! ⏱️ Every ${selectedInterval}h | 🌐 Mode: ${selectedLang.toUpperCase()}`;
                 startNotificationSchedule(parseInt(selectedInterval), selectedLang);
             } catch (err) {
                 status.textContent = "Error saving settings: " + err.message;
@@ -230,10 +231,18 @@
             signOut(auth);
         });
 
-        // دالة لإرسال الإشعار حسب اللغة المختارة
-        function sendLocalNotification(lang = 'ar') {
+        // دالة لإرسال الإشعار حسب اللغة المختارات
+        function sendLocalNotification(lang = 'mix') {
             if (Notification.permission === 'granted') {
-                const quotesList = motivationalQuotes[lang] || motivationalQuotes['ar'];
+                let activeLang = lang;
+
+                // لو الخيار Mix نختار لغة عشوائية بالكامل كل مرة
+                if (lang === 'mix') {
+                    const availableLangs = ['ar', 'en', 'fr', 'franco'];
+                    activeLang = availableLangs[Math.floor(Math.random() * availableLangs.length)];
+                }
+
+                const quotesList = motivationalQuotes[activeLang] || motivationalQuotes['ar'];
                 const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
                 
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
@@ -274,7 +283,7 @@
                         await navigator.serviceWorker.register('sw.js');
                     }
                     const hours = parseInt(notificationIntervalSelect.value || "1");
-                    const lang = notificationLangSelect.value || "ar";
+                    const lang = notificationLangSelect.value || "mix";
                     startNotificationSchedule(hours, lang);
                     status.textContent = "Push Notifications Active! 🎉";
                 } else {
