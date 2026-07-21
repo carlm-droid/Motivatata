@@ -1,28 +1,48 @@
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+const CACHE_NAME = 'motivatata-v2';
+const ASSETS_TO_CACHE = [
+  './',
+  './index.html',
+  './style.css',
+  './motivations.js',
+  './manifest.json',
+  'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'
+];
 
-const firebaseConfig = {
-    apiKey: "AIzaSyAujJQC1DC7_weXGyq3O0kXqOhTV0F06sA",
-    authDomain: "motivatata.firebaseapp.com",
-    projectId: "motivatata",
-    storageBucket: "motivatata.firebasestorage.app",
-    messagingSenderId: "628570963688",
-    appId: "1:628570963688:web:7676a2024fd30a0545d35d"
-};
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS_TO_CACHE);
+    })
+  );
+  self.skipWaiting();
+});
 
-firebase.initializeApp(firebaseConfig);
-const messaging = firebase.messaging();
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keyList) => {
+      return Promise.all(
+        keyList.map((key) => {
+          if (key !== CACHE_NAME) {
+            return caches.delete(key);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
 
-// استقبال الإشعارات في الخلفية حتى لو التطبيق مقفول
-messaging.onBackgroundMessage((payload) => {
-    console.log('[sw.js] Received background message ', payload);
-    
-    const notificationTitle = payload.notification.title || "Motivatata ✨";
-    const notificationOptions = {
-        body: payload.notification.body,
-        icon: 'icon.png',
-        tag: 'motivatata-push'
-    };
-
-    self.registration.showNotification(notificationTitle, notificationOptions);
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(event.request).catch(() => {
+        if (event.request.headers.get('accept').includes('text/html')) {
+          return caches.match('./index.html');
+        }
+      });
+    })
+  );
 });
