@@ -69,15 +69,58 @@
         <p id="status"></p>
     </div>
 
-    <!-- 1. تحميل ملف العبارات أولاً -->
-    <script src="motivations.js"></script>
-
-    <!-- 2. تحميل منطق الفايربيس والتطبيق -->
+    <!-- 🔥 Firebase App & Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+        // 🧠 مولد العبارات الـ 3000 المدمج
+        const templates = {
+            ar: {
+                titles: ["Motivatata ✨", "جرعة طاقة ⚡", "خليك قوي 🌟", "سر النجاح 🎯", "طاقة اليوم 🔋"],
+                starts: ["تذكر دائماً أن", "لا تنسَ أن", "استمر لأن", "اعلم أن", "كل يوم هو فرصة لأن", "أنت قادر على أن"],
+                actions: ["تتخطى الصعاب", "تصل إلى أهدافك", "تبني مستقبلك", "تصنع فرقاً حقيقياً", "تتجاوز حدودك", "تحقق أحلامك"],
+                results: ["بشجاعة وإصرار. 💪", "لأن الاستمرارية هي السر. 🚀", "فالنجاح ينتظر من يسعى. 🔥", "دون التلفت للأعذار. 💡", "بخطوات ثابتة يومياً. 🌟"]
+            },
+            en: {
+                titles: ["Motivatata ✨", "Power Dose ⚡", "Stay Strong 🔥", "Daily Fuel 🚀", "Break Limits 💡"],
+                starts: ["Always remember that", "Never forget that", "Keep going because", "Every single day is a chance to", "You have the power to", "Stay focused and"],
+                actions: ["push through challenges", "reach your ultimate goals", "build the future you dream of", "make a real difference", "break your limits", "achieve greatness"],
+                results: ["with determination. 💪", "because consistency is key. 🚀", "success belongs to the persistent. 🔥", "leaving excuses behind. 🎯", "one step at a time. 🌟"]
+            },
+            fr: {
+                titles: ["Motivatata ✨", "Dose d'énergie ⚡", "Reste Fort 🔥", "Focus & Gagne 🎯", "Force Du Jour 💡"],
+                starts: ["Rappelle-toi toujours que", "N'oublie jamais que", "Continue parce que", "Chaque jour est une opportunité pour", "Tu as le pouvoir de", "Reste concentré pour"],
+                actions: ["surmonter les obstacles", "atteindre tes objectifs", "construire ton avenir", "faire une vraie différence", "dépasser tes limites", "accomplir de grandes choses"],
+                results: ["avec détermination. 💪", "car la régularité est la clé. 🚀", "le succès appartient aux persévérants. 🔥", "en laissant les excuses de côté. 🎯", "un pas à la fois. 🌟"]
+            },
+            franco: {
+                titles: ["Motivatata ✨", "Power Dose ⚡", "Khallik 2awi 🔥", "Rakkez w Rba7 🎯", "Ta2a 3al Sobe7 🔋"],
+                starts: ["Tzakkar deyman 2enno", "Ma tansa 2enno", "Kammel la2enno", "Kull yowm hewe fursa la", "2enta 2adir 2ennak", "Khallik mrakkez la"],
+                actions: ["tet3adda l me7an", "toe3al la ahdafak", "tebne mastaqbalak", "te3mol far2 kbir", "tetjawaz 7dodak", "te7a22e2 2a7lamak"],
+                results: ["b 2israr w 2awwe. 💪", "la2enno l estemraréye heye l serr. 🚀", "l neja7 la elli byes3a. 🔥", "bdoen a3zar. 🎯", "khetwe khetwe kull yowm. 🌟"]
+            }
+        };
+
+        function getRandomElement(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        function getRandomQuote(lang = 'mix') {
+            let selectedLang = lang;
+            if (lang === 'mix') {
+                const langs = ['ar', 'en', 'fr', 'franco'];
+                selectedLang = getRandomElement(langs);
+            }
+            const data = templates[selectedLang] || templates.ar;
+            return {
+                title: getRandomElement(data.titles),
+                body: `${getRandomElement(data.starts)} ${getRandomElement(data.actions)} ${getRandomElement(data.results)}`
+            };
+        }
+
+        // 🔥 Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyAujJQC1DC7_weXGyq3O0kXqOhTV0F06sA",
             authDomain: "motivatata.firebaseapp.com",
@@ -162,13 +205,17 @@
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUser = user;
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    welcomeMsg.textContent = `Welcome back, ${data.name}! ✨`;
-                    if (data.intervalHours) notificationIntervalSelect.value = data.intervalHours;
-                    if (data.lang) notificationLangSelect.value = data.lang;
-                } else {
+                try {
+                    const userDoc = await getDoc(doc(db, "users", user.uid));
+                    if (userDoc.exists()) {
+                        const data = userDoc.data();
+                        welcomeMsg.textContent = `Welcome back, ${data.name}! ✨`;
+                        if (data.intervalHours) notificationIntervalSelect.value = data.intervalHours;
+                        if (data.lang) notificationLangSelect.value = data.lang;
+                    } else {
+                        welcomeMsg.textContent = `Welcome! ✨`;
+                    }
+                } catch(e) {
                     welcomeMsg.textContent = `Welcome! ✨`;
                 }
 
@@ -182,7 +229,7 @@
             }
         });
 
-        // Save User Settings
+        // Save Settings
         document.getElementById('saveIntervalBtn').addEventListener('click', async () => {
             if (!currentUser) return;
             const selectedInterval = notificationIntervalSelect.value;
@@ -209,8 +256,7 @@
         // Send Notification
         function sendLocalNotification(lang = 'mix') {
             if (Notification.permission === 'granted') {
-                // استدعاء الدالة من ملف motivations.js مباشرة
-                const randomQuote = window.getRandomQuote(lang);
+                const randomQuote = getRandomQuote(lang);
                 
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(registration => {
