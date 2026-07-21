@@ -13,11 +13,11 @@
           /* الألوان الفخمة والراكزة */
           --primary: #f59e0b; /* ذهبي ملكي مضيء */
           --primary-dark: #d97706; /* ذهبي مطفي داكن */
-          --text: #f8fafc; /* أبيض ناصع للنصوص على الخلفية الداكنة */
+          --text: #f8fafc; /* أبيض ناصع للنصوص */
           --text-muted: #94a3b8;
-          --bg1: #0f172a; /* كحلي ليلي عميق جداً */
-          --bg2: #1e1b4b; /* كحلي مائل للبنفسجي الغامق */
-          --container-bg: #1e293b; /* رمادي/كحلي فخم للمستند الرئيسي */
+          --bg1: #0f172a; /* كحلي ليلي عميق */
+          --bg2: #1e1b4b; /* كحلي مائل للبنفسجي */
+          --container-bg: #1e293b; /* كحلي فخم للمستند الرئيسي */
         }
         
         * { box-sizing: border-box; }
@@ -42,7 +42,7 @@
           text-align: center;
           max-width: 380px;
           width: 100%;
-          border: 1px solid rgba(245, 158, 11, 0.15); /* إطار ذهبي خفيف جداً */
+          border: 1px solid rgba(245, 158, 11, 0.15);
         }
         
         .title { 
@@ -116,6 +116,32 @@
         <p id="status"></p>
     </div>
 
+    <!-- 🔥 Firebase SDK Modules Integration -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCsxs-C0KF2SxLUiMNxRHn0jfByQPpDrU8",
+            authDomain: "cccc-d7f7f.firebaseapp.com",
+            projectId: "cccc-d7f7f",
+            storageBucket: "cccc-d7f7f.firebasestorage.app",
+            messagingSenderId: "468019806285",
+            appId: "1:468019806285:web:6d170fdc2b0850772c1c04"
+        };
+
+        // Initialize Firebase & Firestore
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        
+        // لجعل الداتا بيز متاحة للواجهة
+        window.db = db;
+        window.addDoc = addDoc;
+        window.collection = collection;
+        console.log("Firebase initialized successfully! 🔥");
+    </script>
+
+    <!-- 🛠️ Main App Logic & Service Worker -->
     <script>
         const swCode = `
             const quotes = {
@@ -150,7 +176,7 @@
                     sendVibe();
                     if(timer) clearInterval(timer);
 
-                    // تم تعديل التايمر ليصبح كل ساعتين (7200000 مللي ثانية)
+                    // إرسال إشعار كل ساعتين (7200000 مللي ثانية)
                     timer = setInterval(() => {
                         sendVibe();
                     }, 7200000);
@@ -164,7 +190,7 @@
 
                 self.registration.showNotification("Motivatata ✨", {
                     body: finalMessage,
-                    icon: 'icon.png', /* يقرأ الآن الأيقونة الفخمة المرفوعة في المستودع */
+                    icon: 'icon.png',
                     tag: 'vibe-notification',
                     renotify: true
                 });
@@ -202,6 +228,21 @@
             if (permission !== 'granted') {
                 alert('Please allow notifications in settings! 🥺');
                 return;
+            }
+
+            // حفظ بيانات المستخدم في قاعدة بيانات Firebase إذا كانت جاهزة
+            try {
+                if (window.db && window.collection && window.addDoc) {
+                    await window.addDoc(window.collection(window.db, "users"), {
+                        name: firstName,
+                        age: age,
+                        gender: gender,
+                        timestamp: new Date()
+                    });
+                    console.log("User saved to Firebase Database! 📥");
+                }
+            } catch (error) {
+                console.log("Database save skipped or error:", error);
             }
 
             if (navigator.serviceWorker.controller) {
