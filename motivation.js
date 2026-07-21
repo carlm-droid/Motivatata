@@ -49,7 +49,8 @@ function generate3000Quotes() {
 
 const motivationalQuotes = generate3000Quotes();
 
-export function getRandomQuote(lang = 'mix') {
+// جعل الدالة متاحة للـ Window مباشرة
+window.getRandomQuote = function(lang = 'mix') {
     let selectedLang = lang;
     if (lang === 'mix') {
         const langs = ['ar', 'en', 'fr', 'franco'];
@@ -57,4 +58,4 @@ export function getRandomQuote(lang = 'mix') {
     }
     const list = motivationalQuotes[selectedLang] || motivationalQuotes.ar;
     return getRandomElement(list);
-}
+};
