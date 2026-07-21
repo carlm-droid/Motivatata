@@ -4,20 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Motivatata ✨</title>
-    
-    <!-- ربط ملف الـ Manifest الخارجي -->
     <link rel="manifest" href="manifest.json">
     
     <style>
         :root {
-          /* الألوان الفخمة والراكزة */
-          --primary: #f59e0b; /* ذهبي ملكي مضيء */
-          --primary-dark: #d97706; /* ذهبي مطفي داكن */
-          --text: #f8fafc; /* أبيض ناصع للنصوص */
+          --primary: #f59e0b;
+          --primary-dark: #d97706;
+          --text: #f8fafc;
           --text-muted: #94a3b8;
-          --bg1: #0f172a; /* كحلي ليلي عميق */
-          --bg2: #1e1b4b; /* كحلي مائل للبنفسجي */
-          --container-bg: #1e293b; /* كحلي فخم للمستند الرئيسي */
+          --bg1: #0f172a;
+          --bg2: #1e1b4b;
+          --container-bg: #1e293b;
         }
         
         * { box-sizing: border-box; }
@@ -36,7 +33,7 @@
         
         .container {
           background: var(--container-bg);
-          padding: 40px 30px;
+          padding: 35px 25px;
           border-radius: 24px;
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
           text-align: center;
@@ -46,26 +43,25 @@
         }
         
         .title { 
-          margin: 0 0 10px; 
+          margin: 0 0 5px; 
           color: var(--primary); 
           font-size: 26px;
           font-weight: 700;
-          letter-spacing: 0.5px;
         }
         
         .subtitle {
-          font-size: 14px;
+          font-size: 13px;
           color: var(--text-muted);
-          margin-bottom: 25px;
+          margin-bottom: 20px;
         }
         
         input, select, button {
           width: 100%;
-          padding: 14px;
-          margin: 12px 0;
+          padding: 12px;
+          margin: 8px 0;
           border: 2px solid #334155;
           border-radius: 12px;
-          font-size: 16px;
+          font-size: 15px;
           background: #0f172a;
           color: var(--text);
           transition: all 0.3s ease;
@@ -83,21 +79,31 @@
           border: none;
           font-weight: bold; 
           cursor: pointer;
-          font-size: 16px;
-          letter-spacing: 0.5px;
+          font-size: 15px;
+          margin-top: 12px;
         }
         
         button:hover { 
           transform: translateY(-2px);
           box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
         }
+
+        .toggle-auth {
+          color: var(--primary);
+          cursor: pointer;
+          font-size: 13px;
+          margin-top: 15px;
+          text-decoration: underline;
+        }
         
         #status { 
-          font-size: 14px; 
+          font-size: 13px; 
           color: var(--primary); 
-          margin-top: 15px; 
+          margin-top: 12px; 
           font-weight: 500;
         }
+
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
@@ -105,21 +111,54 @@
     <div class="container">
         <h2 class="title">Motivatata ✨</h2>
         <div class="subtitle">Your daily armed dose of power</div>
-        <input type="text" id="name" placeholder="Enter your first name">
-        <input type="number" id="age" placeholder="Enter your age" min="1">
-        <select id="gender">
-            <option value="" disabled selected>Select Gender</option>
-            <option value="male">Male</option>
-            <option value="female">Female</option>
-        </select>
-        <button id="activateBtn">Activate Notifications</button>
+
+        <!-- 🔐 Auth Section (Login / Sign Up) -->
+        <div id="authSection">
+            <h3 id="authTitle" style="margin: 0 0 15px; font-size: 18px;">Login</h3>
+            <input type="email" id="email" placeholder="Email Address">
+            <input type="password" id="password" placeholder="Password">
+            
+            <!-- Extra info for signup -->
+            <div id="extraSignupFields" class="hidden">
+                <input type="text" id="name" placeholder="First Name">
+                <input type="number" id="age" placeholder="Age" min="1">
+                <select id="gender">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                </select>
+            </div>
+
+            <button id="authBtn">Log In</button>
+            <div class="toggle-auth" id="toggleAuthBtn">Don't have an account? Sign Up</div>
+        </div>
+
+        <!-- ⚙️ App Dashboard (Shown after login) -->
+        <div id="dashboardSection" class="hidden">
+            <p id="welcomeMsg" style="font-weight: bold; color: var(--primary);"></p>
+            
+            <label style="font-size: 13px; color: var(--text-muted); display: block; text-align: left; margin-top: 10px;">
+                Choose Notification Interval:
+            </label>
+            <select id="timerSelect">
+                <option value="3600000">Every 1 Hour</option>
+                <option value="7200000" selected>Every 2 Hours</option>
+                <option value="14400000">Every 4 Hours</option>
+                <option value="60000">Every 1 Minute (Test Mode)</option>
+            </select>
+
+            <button id="activateBtn">Start Motivatata Timer 🚀</button>
+            <button id="logoutBtn" style="background: #334155; color: #fff; margin-top: 8px;">Log Out</button>
+        </div>
+
         <p id="status"></p>
     </div>
 
-    <!-- 🔥 Firebase SDK Modules Integration -->
+    <!-- 🔥 Firebase SDKs -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCsxs-C0KF2SxLUiMNxRHn0jfByQPpDrU8",
@@ -130,18 +169,122 @@
             appId: "1:468019806285:web:6d170fdc2b0850772c1c04"
         };
 
-        // Initialize Firebase & Firestore
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getFirestore(app);
-        
-        // لجعل الداتا بيز متاحة للواجهة
-        window.db = db;
-        window.addDoc = addDoc;
-        window.collection = collection;
-        console.log("Firebase initialized successfully! 🔥");
+
+        // UI Elements
+        const authSection = document.getElementById('authSection');
+        const dashboardSection = document.getElementById('dashboardSection');
+        const authTitle = document.getElementById('authTitle');
+        const authBtn = document.getElementById('authBtn');
+        const toggleAuthBtn = document.getElementById('toggleAuthBtn');
+        const extraSignupFields = document.getElementById('extraSignupFields');
+        const status = document.getElementById('status');
+        const welcomeMsg = document.getElementById('welcomeMsg');
+
+        let isSignUp = false;
+        let currentUserData = null;
+
+        // Toggle Login / Signup
+        toggleAuthBtn.addEventListener('click', () => {
+            isSignUp = !isSignUp;
+            authTitle.textContent = isSignUp ? "Create Account" : "Login";
+            authBtn.textContent = isSignUp ? "Sign Up" : "Log In";
+            toggleAuthBtn.textContent = isSignUp ? "Already have an account? Login" : "Don't have an account? Sign Up";
+            extraSignupFields.classList.toggle('hidden', !isSignUp);
+        });
+
+        // Auth Logic
+        authBtn.addEventListener('click', async () => {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (!email || !password) {
+                alert('Please fill email and password!');
+                return;
+            }
+
+            status.textContent = "Processing...";
+
+            try {
+                if (isSignUp) {
+                    const name = document.getElementById('name').value.trim();
+                    const age = document.getElementById('age').value.trim();
+                    const gender = document.getElementById('gender').value;
+
+                    if (!name || !age || !gender) {
+                        alert('Please fill all profile fields!');
+                        return;
+                    }
+
+                    const res = await createUserWithEmailAndPassword(auth, email, password);
+                    // Save user profile to Firestore
+                    await setDoc(doc(db, "users", res.user.uid), {
+                        name: name,
+                        age: age,
+                        gender: gender,
+                        email: email
+                    });
+                } else {
+                    await signInWithEmailAndPassword(auth, email, password);
+                }
+                status.textContent = "";
+            } catch (err) {
+                status.textContent = err.message;
+            }
+        });
+
+        // Auth State Listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    currentUserData = userDoc.data();
+                    welcomeMsg.textContent = `Welcome back, ${currentUserData.name}! ✨`;
+                } else {
+                    currentUserData = { name: "Friend", gender: "male" };
+                    welcomeMsg.textContent = `Welcome! ✨`;
+                }
+
+                authSection.classList.add('hidden');
+                dashboardSection.classList.remove('hidden');
+            } else {
+                authSection.classList.remove('hidden');
+                dashboardSection.classList.add('hidden');
+                currentUserData = null;
+            }
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => signOut(auth));
+
+        // Activate Timer Logic
+        document.getElementById('activateBtn').addEventListener('click', async () => {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') {
+                alert('Please allow notifications!');
+                return;
+            }
+
+            const interval = parseInt(document.getElementById('timerSelect').value);
+
+            if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                    action: 'startTimer',
+                    name: currentUserData ? currentUserData.name : "Friend",
+                    gender: currentUserData ? currentUserData.gender : "male",
+                    interval: interval
+                });
+                status.textContent = 'Armed! Motivatata timer is active. 🔥';
+            } else {
+                status.textContent = 'Connecting... Click once more!';
+                window.location.reload();
+            }
+        });
     </script>
 
-    <!-- 🛠️ Main App Logic & Service Worker -->
+    <!-- 🛠️ Service Worker Logic -->
     <script>
         const swCode = `
             const quotes = {
@@ -172,14 +315,14 @@
                 if (event.data.action === 'startTimer') {
                     userName = event.data.name;
                     userGender = event.data.gender;
+                    const interval = event.data.interval || 7200000;
                     
                     sendVibe();
                     if(timer) clearInterval(timer);
 
-                    // إرسال إشعار كل ساعتين (7200000 مللي ثانية)
                     timer = setInterval(() => {
                         sendVibe();
-                    }, 7200000);
+                    }, interval);
                 }
             });
 
@@ -205,58 +348,6 @@
             .then(reg => reg.update())
             .catch(err => console.error(err));
         }
-
-        const form = {
-            name: document.getElementById('name'),
-            age: document.getElementById('age'),
-            gender: document.getElementById('gender'),
-            button: document.getElementById('activateBtn'),
-            status: document.getElementById('status')
-        };
-
-        form.button.addEventListener('click', async () => {
-            const firstName = form.name.value.trim().split(/\s+/)[0];
-            const age = form.age.value.trim();
-            const gender = form.gender.value;
-
-            if (!firstName || !age || !gender) {
-                alert('Fill everything first! 📝');
-                return;
-            }
-
-            const permission = await Notification.requestPermission();
-            if (permission !== 'granted') {
-                alert('Please allow notifications in settings! 🥺');
-                return;
-            }
-
-            // حفظ بيانات المستخدم في قاعدة بيانات Firebase إذا كانت جاهزة
-            try {
-                if (window.db && window.collection && window.addDoc) {
-                    await window.addDoc(window.collection(window.db, "users"), {
-                        name: firstName,
-                        age: age,
-                        gender: gender,
-                        timestamp: new Date()
-                    });
-                    console.log("User saved to Firebase Database! 📥");
-                }
-            } catch (error) {
-                console.log("Database save skipped or error:", error);
-            }
-
-            if (navigator.serviceWorker.controller) {
-                navigator.serviceWorker.controller.postMessage({
-                    action: 'startTimer',
-                    name: firstName,
-                    gender: gender
-                });
-                form.status.textContent = 'Armed! Active every 2 hours. ✨';
-            } else {
-                form.status.textContent = 'Connecting... Click once more! 😉';
-                window.location.reload();
-            }
-        });
     </script>
 </body>
 </html>
