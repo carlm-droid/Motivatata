@@ -69,12 +69,14 @@
         <p id="status"></p>
     </div>
 
-    <!-- 🔥 Firebase App & SDKs & App Logic -->
+    <!-- 1. تحميل ملف العبارات أولاً -->
+    <script src="motivations.js"></script>
+
+    <!-- 2. تحميل منطق الفايربيس والتطبيق -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        import { getRandomQuote } from "./motivations.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAujJQC1DC7_weXGyq3O0kXqOhTV0F06sA",
@@ -207,7 +209,8 @@
         // Send Notification
         function sendLocalNotification(lang = 'mix') {
             if (Notification.permission === 'granted') {
-                const randomQuote = getRandomQuote(lang);
+                // استدعاء الدالة من ملف motivations.js مباشرة
+                const randomQuote = window.getRandomQuote(lang);
                 
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(registration => {
