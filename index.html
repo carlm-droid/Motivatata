@@ -39,7 +39,7 @@
             
             <!-- ⏱️ اختيار التكرار بالساعات -->
             <div class="timer-box">
-                <label for="notificationInterval">How often to receive power-ups? ⏱️:</label>
+                <label for="notificationInterval">Notification Interval ⏱️:</label>
                 <select id="notificationInterval">
                     <option value="1">Every 1 Hour</option>
                     <option value="2">Every 2 Hours</option>
@@ -48,7 +48,17 @@
                     <option value="12">Every 12 Hours</option>
                     <option value="24">Once a Day (24 Hours)</option>
                 </select>
-                <button id="saveIntervalBtn" style="padding: 6px; font-size: 12px; margin-top: 4px;">Save Interval</button>
+
+                <!-- 🌐 اختيار لغة الإشعارات -->
+                <label for="notificationLang" style="margin-top: 8px;">Notification Language 🌐:</label>
+                <select id="notificationLang">
+                    <option value="ar">العربية (Arabic)</option>
+                    <option value="en">English</option>
+                    <option value="fr">Français</option>
+                    <option value="franco">Lebanese Franco (Arabizi) 🇱🇧</option>
+                </select>
+
+                <button id="saveIntervalBtn" style="padding: 6px; font-size: 12px; margin-top: 8px;">Save Settings</button>
             </div>
             
             <button id="enablePushBtn" style="margin-top: 12px;">Enable Push Notifications 🔔</button>
@@ -77,17 +87,33 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // قائمة العبارات التحفيزية المتنوعة
-        const motivationalQuotes = [
-            { title: "Motivatata ✨", body: "استمر، فنجاحك أقرب مما تتخيل اليوم! 💪" },
-            { title: "Power Dose ⚡", body: "كل خطوة صغيرة تصنع فرقاً كبيراً في مستقبلك." },
-            { title: "Stay Strong 🔥", body: "لا تقلق من الصعاب، فهي تصنع الأبطال." },
-            { title: "Daily Fuel 🚀", body: "امنح نفسك دفعة طاقة، أنت قادر على إنجاز المستحيل." },
-            { title: "Break Limits 💡", body: "الاستمرارية هي سر العظماء.. لا تتوقف الآن!" },
-            { title: "Focus & Win 🎯", body: "ركز على أهدافك ودع الأعذار جانباً." },
-            { title: "Keep Pushing 🌟", body: "خطوة إضافية اليوم تعني إنجازاً عظيماً غداً." },
-            { title: "Energy Boost 🔋", body: "تذكر لماذا بدأت.. واصل المسير بقوة!" }
-        ];
+        // 📚 العبارات التحفيزية مقسمة حسب اللغة
+        const motivationalQuotes = {
+            ar: [
+                { title: "Motivatata ✨", body: "استمر، فنجاحك أقرب مما تتخيل اليوم! 💪" },
+                { title: "جرعة طاقة ⚡", body: "كل خطوة صغيرة تصنع فرقاً كبيراً في مستقبلك." },
+                { title: "خليك قزي 🌟", body: "الاستمرارية هي سر العظماء.. لا تتوقف الآن!" },
+                { title: "ركز وربح 🎯", body: "ركز على أهدافك ودع الأعذار جانباً." }
+            ],
+            en: [
+                { title: "Motivatata ✨", body: "Keep going, your success is closer than you think! 💪" },
+                { title: "Power Dose ⚡", body: "Every small step makes a big difference for your future." },
+                { title: "Stay Strong 🔥", body: "Consistency is the key to greatness. Don't stop now!" },
+                { title: "Focus & Win 🎯", body: "Focus on your goals and leave the excuses behind." }
+            ],
+            fr: [
+                { title: "Motivatata ✨", body: "Continuez, votre succès est plus proche que vous ne le pensez ! 💪" },
+                { title: "Dose d'énergie ⚡", body: "Chaque petit pas fait une grande différence pour votre avenir." },
+                { title: "Reste Fort 🔥", body: "La régularité est la clé de la grandeur. N'abandonne pas !" },
+                { title: "Focus & Gagne 🎯", body: "Concentre-toi sur tes objectifs et oublie les excuses." }
+            ],
+            franco: [
+                { title: "Motivatata ✨", body: "Kammel, neja7ak a2rab men ma btetkhayyal l yawm! 💪" },
+                { title: "Power Dose ⚡", body: "Kull khetwe zghire bte3mol far2 kbir b mestaqbalak." },
+                { title: "Khallik 2awi 🔥", body: "L estemraréye heye serr l 3ozama2.. ma twa22ef halla2!" },
+                { title: "Rakkezz w Rba7 🎯", body: "Rakkezz 3ala ahdafak w etrok l a3zar 3a janab." }
+            ]
+        };
 
         // UI Elements
         const authSection = document.getElementById('authSection');
@@ -99,6 +125,7 @@
         const status = document.getElementById('status');
         const welcomeMsg = document.getElementById('welcomeMsg');
         const notificationIntervalSelect = document.getElementById('notificationInterval');
+        const notificationLangSelect = document.getElementById('notificationLang');
 
         let isSignUp = false;
         let currentUser = null;
@@ -143,7 +170,8 @@
                         age: age,
                         gender: gender,
                         email: email,
-                        intervalHours: "1"
+                        intervalHours: "1",
+                        lang: "ar"
                     });
                 } else {
                     await signInWithEmailAndPassword(auth, email, password);
@@ -160,10 +188,10 @@
                 currentUser = user;
                 const userDoc = await getDoc(doc(db, "users", user.uid));
                 if (userDoc.exists()) {
-                    welcomeMsg.textContent = `Welcome back, ${userDoc.data().name}! ✨`;
-                    if (userDoc.data().intervalHours) {
-                        notificationIntervalSelect.value = userDoc.data().intervalHours;
-                    }
+                    const data = userDoc.data();
+                    welcomeMsg.textContent = `Welcome back, ${data.name}! ✨`;
+                    if (data.intervalHours) notificationIntervalSelect.value = data.intervalHours;
+                    if (data.lang) notificationLangSelect.value = data.lang;
                 } else {
                     welcomeMsg.textContent = `Welcome! ✨`;
                 }
@@ -178,18 +206,21 @@
             }
         });
 
-        // Save User Interval Preference
+        // Save User Settings (Interval & Language)
         document.getElementById('saveIntervalBtn').addEventListener('click', async () => {
             if (!currentUser) return;
             const selectedInterval = notificationIntervalSelect.value;
+            const selectedLang = notificationLangSelect.value;
+
             try {
                 await updateDoc(doc(db, "users", currentUser.uid), {
-                    intervalHours: selectedInterval
+                    intervalHours: selectedInterval,
+                    lang: selectedLang
                 });
-                status.textContent = `Interval saved: Every ${selectedInterval}h ⏱️`;
-                startNotificationSchedule(parseInt(selectedInterval));
+                status.textContent = `Settings saved! ⏱️ Every ${selectedInterval}h | 🌐 Language: ${selectedLang.toUpperCase()}`;
+                startNotificationSchedule(parseInt(selectedInterval), selectedLang);
             } catch (err) {
-                status.textContent = "Error saving interval: " + err.message;
+                status.textContent = "Error saving settings: " + err.message;
             }
         });
 
@@ -199,10 +230,11 @@
             signOut(auth);
         });
 
-        // دالة لإرسال إشعار حقيقي إلى شريط الإشعارات
-        function sendLocalNotification() {
+        // دالة لإرسال الإشعار حسب اللغة المختارة
+        function sendLocalNotification(lang = 'ar') {
             if (Notification.permission === 'granted') {
-                const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+                const quotesList = motivationalQuotes[lang] || motivationalQuotes['ar'];
+                const randomQuote = quotesList[Math.floor(Math.random() * quotesList.length)];
                 
                 if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                     navigator.serviceWorker.ready.then(registration => {
@@ -220,15 +252,15 @@
             }
         }
 
-        // دالة جدولة الإشعارات حسب الوقت المختار
-        function startNotificationSchedule(hours) {
+        // جدولة الإشعارات
+        function startNotificationSchedule(hours, lang) {
             if (notificationTimer) clearInterval(notificationTimer);
             
             const intervalMs = hours * 60 * 60 * 1000;
-            sendLocalNotification();
+            sendLocalNotification(lang);
 
             notificationTimer = setInterval(() => {
-                sendLocalNotification();
+                sendLocalNotification(lang);
             }, intervalMs);
         }
 
@@ -242,7 +274,8 @@
                         await navigator.serviceWorker.register('sw.js');
                     }
                     const hours = parseInt(notificationIntervalSelect.value || "1");
-                    startNotificationSchedule(hours);
+                    const lang = notificationLangSelect.value || "ar";
+                    startNotificationSchedule(hours, lang);
                     status.textContent = "Push Notifications Active! 🎉";
                 } else {
                     status.textContent = "Permission denied for notifications.";
